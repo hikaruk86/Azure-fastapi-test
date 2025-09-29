@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app
+    
+    depends_on:
+      db:
+        condition: service_healthy       # DB起動後にFastAPI起動
+    environment:
+      # FastAPI から MySQL への接続URL
+      # backendコードでは os.getenv("DATABASE_URL") で取得して使います
+      DATABASE_URL: mysql+pymysql://fastapi_user:fastapi_pass@db:3306/fastapi_db
+
+  db:
+    image: mysql:8.0
+    container_name: mysql_db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass       # rootユーザーのパスワード
+      MYSQL_DATABASE: fastapi_db          # 作成するデフォルトDB名
+      MYSQL_USER: fastapi_user            # 接続用ユーザー
+      MYSQL_PASSWORD: fastapi_pass        # 接続用ユーザーパスワード
+    ports:
+      - "3306:3306"                        # ホストから直接MySQLに接続したい場合
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:                           # DB起動確認
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      retries: 5
+
+volumes:
+  mysql_data:

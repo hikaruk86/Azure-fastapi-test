@@ -1,0 +1,6 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+pymysql      # MySQL接続用（MySQLを使う場合）
+python-dotenv  # 環境変数を使う場合(必要に応じて)
+cryptography
